@@ -1,7 +1,7 @@
 import setuptools
 
 setuptools.setup(
-    name='algernon',
+    name='moncrief',
     version='1.0.0',
     url='https://github.com/AlgernonSolutions/algernon',
     license='GNU Affero General Public License v3.0',
