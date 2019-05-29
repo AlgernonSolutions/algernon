@@ -9,14 +9,11 @@ from typing import Dict
 import requests
 
 
-class GqlNotary:
+class GqlSigner:
     _region = os.getenv('AWS_REGION', 'us-east-1')
     _service = 'appsync'
 
-    def __init__(self, gql_endpoint: str, session: requests.session() = None):
-        if not session:
-            session = requests.session()
-        self._session = session
+    def __init__(self, gql_endpoint: str):
         self._host = gql_endpoint
         self._uri = '/graphql'
         self._method = 'POST'
@@ -27,19 +24,6 @@ class GqlNotary:
         self._session_token = os.getenv('AWS_SESSION_TOKEN', None)
         self._credentials = f"Credentials={self._access_key}"
         self._request_url = f'https://{gql_endpoint}{self._uri}'
-
-    def send(self, command: str, variables: Dict = None):
-        if not variables:
-            variables = {}
-        headers = self.generate_headers(command, variables)
-        payload = {'query': command, 'variables': variables}
-        if os.environ['DEBUG'] == 'True':
-            headers = {'x-api-key': os.environ['GQL_API_KEY']}
-        response = requests.post(self._request_url, headers=headers, json=payload)
-        if response.status_code != 200:
-            raise RuntimeError(f'error communicating with GQL API: {response.text}, '
-                               f'command: {command}, variables: {variables}')
-        return response.text
 
     def generate_headers(self, query, variables):
         t = datetime.datetime.utcnow()
@@ -101,3 +85,30 @@ class GqlNotary:
     @classmethod
     def _sign(cls, key, message):
         return hmac.new(key, message.encode('utf-8'), hashlib.sha256).digest()
+
+
+class GqlNotary:
+    _region = os.getenv('AWS_REGION', 'us-east-1')
+    _service = 'appsync'
+
+    def __init__(self, gql_endpoint: str, session: requests.session() = None):
+        if not session:
+            session = requests.session()
+        self._session = session
+        self._gql_endpoint = gql_endpoint
+        self._uri = '/graphql'
+        self._request_url = f'https://{gql_endpoint}{self._uri}'
+
+    def send(self, command: str, variables: Dict = None):
+        if not variables:
+            variables = {}
+        signer = GqlSigner(self._gql_endpoint)
+        headers = signer.generate_headers(command, variables)
+        payload = {'query': command, 'variables': variables}
+        if os.environ['DEBUG'] == 'True':
+            headers = {'x-api-key': os.environ['GQL_API_KEY']}
+        response = requests.post(self._request_url, headers=headers, json=payload)
+        if response.status_code != 200:
+            raise RuntimeError(f'error communicating with GQL API: {response.text}, '
+                               f'command: {command}, variables: {variables}')
+        return response.text
