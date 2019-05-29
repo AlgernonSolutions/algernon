@@ -1,5 +1,4 @@
 import rapidjson
-from algernon.serializers import AlgDecoder
 
 
 def queued(production_fn):
@@ -9,7 +8,7 @@ def queued(production_fn):
         context = args[1]
         for entry in event['Records']:
             entry_body = rapidjson.loads(entry['body'])
-            original_payload = rapidjson.loads(entry_body['Message'], object_hook=AlgDecoder.object_hook)
+            original_payload = rapidjson.loads(entry_body['Message'])
             results.append(production_fn(original_payload, context))
         return results
     return wrapper

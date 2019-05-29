@@ -2,13 +2,13 @@ import setuptools
 
 setuptools.setup(
     name='moncrief',
-    version='1.0.0',
+    version='2.0.0',
     url='https://github.com/AlgernonSolutions/algernon',
     license='GNU Affero General Public License v3.0',
     author='algernon_solutions/jcubeta',
     author_email='jcubeta@algernon.solutions',
     description='This library contains the basic units of functionality and infrastructure needed to effectively run '
-                'operations and applications in a distributed and severless fashion. ',
+                'operations and applications in a distributed and severless fashion.',
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
