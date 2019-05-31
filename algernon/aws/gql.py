@@ -2,6 +2,7 @@ import datetime
 import hashlib
 import hmac
 import json
+import logging
 import os
 import urllib.parse
 from typing import Dict
@@ -26,6 +27,8 @@ class GqlSigner:
         self._request_url = f'https://{gql_endpoint}{self._uri}'
 
     def generate_headers(self, query, variables):
+        logging.info(f'called to generate_headers for the gql signer, '
+                     f'access_key: {self._access_key}, secret_key: {self._secret_key}, token: {self._session_token}')
         t = datetime.datetime.utcnow()
         amz_date = t.strftime('%Y%m%dT%H%M%SZ')
         date_stamp = t.strftime('%Y%m%d')
@@ -34,6 +37,7 @@ class GqlSigner:
         string_to_sign = self._generate_string_to_sign(canonical_request, amz_date, credential_scope)
         signature = self._generate_signature(string_to_sign, date_stamp)
         headers = self._generate_headers(credential_scope, signature, amz_date)
+        logging.info(f'generated headers for query/variables {query}/{variables} are {headers}')
         return headers
 
     def _generate_canonical_request(self, amz_date, query, variables):
@@ -105,7 +109,7 @@ class GqlNotary:
         signer = GqlSigner(self._gql_endpoint)
         headers = signer.generate_headers(command, variables)
         payload = {'query': command, 'variables': variables}
-        if os.environ['DEBUG'] == 'True':
+        if os.getenv('DEBUG', 'False') == 'True':
             headers = {'x-api-key': os.environ['GQL_API_KEY']}
         response = requests.post(self._request_url, headers=headers, json=payload)
         if response.status_code != 200:
